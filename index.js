@@ -1,8 +1,6 @@
 canvas = document.querySelector("canvas");
 ctx = canvas.getContext("2d");
 
-
-
 var moveUp;
 var moveLeft;
 var moveDown;
