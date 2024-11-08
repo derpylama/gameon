@@ -211,10 +211,7 @@ visibleObjList = [];
 
 objList = [];
 
-
-//objList.push(new Wall(150,400,500,60,""));
-objList.push(new Wall(150,200,30,50,""));
-//objList.push(new Wall(50,200,30,100,""));
+objList.push(new Wall(50,100,30,100,""));
 objList.push(new Wall(100,200,30,100,""));
 
 function gameLoop (){
