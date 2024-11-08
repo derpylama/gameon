@@ -67,7 +67,6 @@ class Wall{
             var collisionDetectedX = false;
             var collisionDetectedY = false;
             
-            
             for (let i = 0; i < objList.length; i++) {
             
                     collisionDetectedX = this.x + this.width > player.x && this.x < player.x + player.width;
