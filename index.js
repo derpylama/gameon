@@ -5,8 +5,12 @@ var moveUp;
 var moveLeft;
 var moveDown;
 var moveRight;
+var movementStopY = false;
+var movementStopX = false;
 
-var speed = 1;
+
+var speed = 2;
+var RotSpeed = 2;
 
 document.addEventListener("keydown", (e) =>{
     if(e.key == "w"){
@@ -57,68 +61,81 @@ class Wall{
         this.vX = 0;
         this.dx = 0;
         this.dy = 0;
-        this.collidedY = false;
-        this.collidedX = false;
     }
     
-    detection(){
-        var collisionDetectedX = false;
-        var collisionDetectedY = false;
-        
-        
-        
-            let element = player;
+    detection(player){
+            var collisionDetectedX = false;
+            var collisionDetectedY = false;
             
-            if (this != element) {
-                    collisionDetectedX =  
-                    this.x + this.width > element.x && 
-                    this.x < element.x + element.width;
-                    
-                    collisionDetectedY = 
-                    this.y + this.height > element.y && 
-                    this.y < element.y + element.height;               
-                    
-                    if(collisionDetectedY){
+            
+            for (let i = 0; i < objList.length; i++) {
+            
+                    collisionDetectedX = this.x + this.width > player.x && this.x < player.x + player.width;
+                    collisionDetectedY = this.y < player.y + player.height && this.y + this.height > player.y;             
 
+                    var xObjLimitLeft = player.x > this.x;
+                    var xObjLimitRight = player.x < this.x + this.width;
 
-
-                        /*objList.forEach((e) => {    
-                            
-                            
-                            
-                            if(e != this){
-                                e.dy = 0;
-                                e.vY = 0;
-
-                            }
-                                
-                                e.collidedY = true;
-                            
-                                if(element.y < this.y)
-                                    this.y = element.y + element.height;
-
-                                if(element.y > this.y)
-                                    this.y = element.y - this.height;
-                            
-                            
-                        })*/ 
-
+                    if(collisionDetectedY && moveUp && xObjLimitLeft && xObjLimitRight){
+                        movementStopY = true;
+                        
+                        this.reaction("Y")
                     }
+                    else if(collisionDetectedY && moveDown && xObjLimitLeft && xObjLimitRight){
+                        movementStopY = true;
+                        
+                        this.reaction("Y")
+                    }
+                    else if(collisionDetectedY){
+                        movementStopY = false;
+                        
+                    } 
                     
-                }
-               
-        }
+                    if(collisionDetectedX && moveUp && this.y < player.y && this.y + this.height > player.y + player.height){
+                        movementStopX = true;
+                        this.reaction("X");
+                    }
+                    else if(collisionDetectedX && moveDown && this.y < player.y && this.y + this.height > player.y + player.height){
+                        movementStopX = true;
+                        this.reaction("X");
+                    }
+                    else if(collisionDetectedX && !moveDown && !moveUp){
+                        movementStopX = false;
+                    }
 
+                }
+            
+            }
+    
+    reaction(direction){
+        
+        if(direction === "Y"){
+            objList.forEach((e) => {
+                e.dy = 0;
+                e.vY = 0;
+            
+            })
+        }
+        else if(direction === "X"){
+            objList.forEach((e) => {
+                e.dx = 0;
+                e.vX = 0;
+            
+            })
+        }
+    }
 
     move(){
 
         var angle = player.currentRot * Math.PI/180;
 
-        if(!this.collidedY){
+        if(!movementStopY){
             this.dy = speed * Math.sin(angle);  
         }
 
-        this.dx = speed * Math.cos(angle);
+        if(!movementStopX){
+            this.dx = speed * Math.cos(angle);
+        }
 
         if(moveUp){
             this.vY = this.dy;
@@ -127,9 +144,8 @@ class Wall{
 
         if(moveDown){
             this.vY = -this.dy;
-            this.vX = this.dx;
+            this.vX = -this.dx;
         }
-
 
         if(moveUp || moveDown){
             this.y += this.vY;
@@ -175,11 +191,11 @@ class Player {
 
     update(){
         if(moveLeft){
-            this.rotation = -1;
+            this.rotation = -2;
         }
 
         if(moveRight){
-            this.rotation = 1;
+            this.rotation = 2;
         }
         
         if(!moveLeft && !moveRight){
@@ -189,16 +205,17 @@ class Player {
 
 }
 
-var player = new Player(490,290,20,20,"") 
+var player = new Player(490,290,20,20,"");
 
 visibleObjList = [];
 
-
 objList = [];
-objList.push(new Wall(100,100,500,60,""))
-objList.push(new Wall(100,400,500,60,""))
 
 
+//objList.push(new Wall(150,400,500,60,""));
+objList.push(new Wall(150,200,30,50,""));
+//objList.push(new Wall(50,200,30,100,""));
+objList.push(new Wall(100,200,30,100,""));
 
 function gameLoop (){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -214,9 +231,9 @@ function gameLoop (){
     });
     
     objList.forEach((element) => {
-        element.detection();
+        element.detection(player);
     })
-    
+
     player.rotateRender();
 
     objList.forEach(element => {
