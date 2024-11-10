@@ -10,7 +10,7 @@ var movementStopX = false;
 
 
 var speed = 2;
-var RotSpeed = 2;
+var rotationSpeed = 1;
 
 document.addEventListener("keydown", (e) =>{
     if(e.key == "w"){
@@ -30,6 +30,7 @@ document.addEventListener("keydown", (e) =>{
     }
     
 });
+
 
 
 document.addEventListener("keyup", (e) =>{
@@ -158,8 +159,29 @@ class Wall{
 
         ctx.fillStyle = "black";
         ctx.fillRect(this.x, this.y, this.width, this.height); 
+        
+        
     }
 
+}
+
+class Sonar {
+
+    render(){
+        
+        ctx.beginPath();
+        ctx.moveTo(player.x + player.width/2, player.y + player.height/2);
+        ctx.save();
+        ctx.translate(player.x + player.width/2, player.y + player.height/2);
+        ctx.rotate(player.currentRot * Math.PI / 180);
+        ctx.arc(0, 0, 400, 157.5 * Math.PI / 180, 202.5 * Math.PI / 180);
+        //ctx.fillStyle = "yellow";
+        //ctx.fill(); 
+        
+        ctx.restore();
+        ctx.clip();
+        
+    }
 }
 
 class Player {
@@ -190,11 +212,11 @@ class Player {
 
     update(){
         if(moveLeft){
-            this.rotation = -2;
+            this.rotation = -rotationSpeed;
         }
 
         if(moveRight){
-            this.rotation = 2;
+            this.rotation = rotationSpeed;
         }
         
         if(!moveLeft && !moveRight){
@@ -205,6 +227,7 @@ class Player {
 }
 
 var player = new Player(490,290,20,20,"");
+var sonar = new Sonar();
 
 visibleObjList = [];
 
@@ -214,14 +237,15 @@ objList.push(new Wall(50,100,30,100,""));
 objList.push(new Wall(100,200,30,100,""));
 
 function gameLoop (){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.reset();
 
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    
     player.update();
-    
+
+    sonar.render();
+
     objList.forEach(element => {
         element.move();
     });
