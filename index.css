@@ -1,3 +1,51 @@
+body{
+    display: flex;
+}
+
 canvas{
     border: solid red;
+}
+
+#GUI{
+    width: 350px;
+    z-index: -1;
+}
+
+div{
+    height: 350px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#Oxygen{
+    position: absolute;
+    top: 130px;
+    left: 1080px;
+    height: 150px;
+    width: 50px;
+    background-color: aqua;
+}
+
+#SyreTank{
+    position: absolute;
+    left: 1020px;
+    top: 130px;
+    height: 180px;
+    z-index: 1;
+}
+
+#Fov{
+    height: 40px;
+}
+
+#MoveSpeed{
+    height: 40px;
+}
+
+#Stats{
+    position: relative;
+    left: -100px;
+    display: flex;
+    flex-direction: column;
+    height: 80px;
 }
