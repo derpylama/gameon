@@ -19,9 +19,9 @@ div{
 
 #Oxygen{
     position: absolute;
-    top: 130px;
+    top: 140px;
     left: 1080px;
-    height: 150px;
+    height: 160px;
     width: 50px;
     background-color: aqua;
 }
@@ -43,9 +43,9 @@ div{
 }
 
 #Stats{
+    color: white;
     position: relative;
-    left: -100px;
-    display: flex;
-    flex-direction: column;
-    height: 80px;
+    left: -210px;
+    top: 110px;
+    list-style: none;
 }
