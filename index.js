@@ -1,5 +1,6 @@
 canvas = document.querySelector("canvas");
 ctx = canvas.getContext("2d");
+oxygen = document.getElementById("Oxygen");
 
 var moveUp;
 var moveLeft;
@@ -8,9 +9,14 @@ var moveRight;
 var movementStopY = false;
 var movementStopX = false;
 
-
+var viewDistance = 300;
+var viewAngle = 60;
 var speed = 2;
 var rotationSpeed = 1;
+var startOxygenLevel = oxygen.offsetHeight;
+var oxygenTickSpeed = 200;
+var lastOxygenTick = 0;
+var oxygenReductionSpeed = 1;
 
 document.addEventListener("keydown", (e) =>{
     if(e.key == "w"){
@@ -174,9 +180,9 @@ class Sonar {
         ctx.save();
         ctx.translate(player.x + player.width/2, player.y + player.height/2);
         ctx.rotate(player.currentRot * Math.PI / 180);
-        ctx.arc(0, 0, 400, 157.5 * Math.PI / 180, 202.5 * Math.PI / 180);
-        //ctx.fillStyle = "yellow";
-        //ctx.fill(); 
+        ctx.arc(0, 0, viewDistance, (180 - viewAngle/2) * Math.PI / 180, (180 + viewAngle/2) * Math.PI / 180);
+        ctx.strokeStyle = "white";
+        ctx.stroke(); 
         
         ctx.restore();
         ctx.clip();
@@ -195,6 +201,7 @@ class Player {
         this.vX = 0;
         this.rotation = 0;
         this.currentRot = 0;
+        this.currentOxygen = startOxygenLevel;
     }
 
     rotateRender(){
@@ -222,14 +229,32 @@ class Player {
         if(!moveLeft && !moveRight){
             this.rotation = 0;
         }
+
+        this.oxygenAmount();
     }
 
+    oxygenAmount(){
+        if(lastOxygenTick == 0 || new Date() - lastOxygenTick > oxygenTickSpeed){
+            this.currentOxygen -= oxygenReductionSpeed;
+
+            /*
+            if(this.currentOxygen <= 0){
+                alert("gameover")
+            }*/
+
+            console.log(this.currentOxygen);
+            oxygen.style.height = this.currentOxygen + "px"
+            lastOxygenTick = new Date();
+        }
+    }
+
+    resetOxygen(){
+        this.currentOxygen = startOxygenLevel;
+    }
 }
 
 var player = new Player(490,290,20,20,"");
 var sonar = new Sonar();
-
-visibleObjList = [];
 
 objList = [];
 
@@ -262,6 +287,5 @@ function gameLoop (){
     
     requestAnimationFrame(gameLoop)
 }
-
 
 gameLoop();
