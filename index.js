@@ -35,10 +35,11 @@ var viewAngle = 60;
 var speed = 2;
 var rotationSpeed = 1;
 var startOxygenLevel = oxygen.offsetHeight;
-var oxygenTickSpeed = 200;
+var oxygenTickSpeed = 100;
 var lastOxygenTick = 0;
 var oxygenReductionSpeed = 1;
 var gameEnded = false;
+var currentLevel;
 
 //Audio
 var lastPlaybackTime = 0;
@@ -291,9 +292,9 @@ class Sonar {
         ctx.translate(player.x + player.width/2, player.y + player.height/2);
         ctx.rotate(player.currentRot * Math.PI / 180);
         ctx.arc(0, 0, viewDistance, (180 - viewAngle/2) * Math.PI / 180, (180 + viewAngle/2) * Math.PI / 180);
-        ctx.arc(0,0, 60, 0, 2 * Math.PI)
         ctx.strokeStyle = "white";
         ctx.stroke();
+        ctx.arc(0,0, 60, 0, 2 * Math.PI)
         
         ctx.restore();
         ctx.clip();
@@ -366,16 +367,30 @@ class Gui{
     
         var gameOverP = document.createElement("p")
         var gameOverDiv = document.createElement("div");
+        var restartButton = document.createElement("button");
         gameOverDiv.classList = "gameover";
         gameOverP.innerHTML = gameOverText;
-    
+        restartButton.id = "restart";
+
         if(document.querySelectorAll(".gameover").length < 1){
             gameOverDiv.appendChild(gameOverP);
+            gameOverDiv.appendChild(restartButton);
+
             body.appendChild(gameOverDiv);
             
             gameEnded = true
-    
         }
+
+        gameOverDiv.addEventListener("click", (e) => {
+            if(e.target.id == "restart"){
+                console.log("test")
+                objList = currentLevel;
+                gameOverDiv.remove();
+                gameEnded = false;
+                gameLoop();
+                player.resetOxygen();
+            }
+        })
     
     }
 }
@@ -460,13 +475,17 @@ var sonar = new Sonar();
 var gui = new Gui();
 
 objList = [];
+lv1List = [];
 
-objList.push(new Wall(100,210,300,50,""));
-objList.push(new Wall(100,200,500,50,""));
+lv1List.push(new Wall(100,210,300,50,""));
+lv1List.push(new Wall(100,200,500,50,""));
 
-objList.push(new PickupableItem(50,50, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
-objList.push(new PickupableItem(100,50,exitImg.width * 0.75, exitImg.height * 0.75,"finishLevel"))
-objList.push(new PickupableItem(150,400, uppgradeImg.width/2, uppgradeImg.height/2,"upgrade"))
+lv1List.push(new PickupableItem(50,50, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+lv1List.push(new PickupableItem(100,50,exitImg.width * 0.75, exitImg.height * 0.75,"finishLevel"))
+lv1List.push(new PickupableItem(150,400, uppgradeImg.width/2, uppgradeImg.height/2,"upgrade"))
+
+objList = lv1List;
+currentLevel = lv1List;
 
 function gameLoop (){
     ctx.reset();
