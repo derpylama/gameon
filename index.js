@@ -4,6 +4,8 @@ var oxygen = document.getElementById("Oxygen");
 var oxygenSizeGui = document.getElementById("OxygenSize");
 var moveSpeedGui = document.getElementById("MoveSpeed")
 var fovGui = document.getElementById("Fov");
+var body = document.querySelector("body");
+
 
 var moveUp;
 var moveLeft;
@@ -12,19 +14,47 @@ var moveRight;
 var movementStopY = false;
 var movementStopX = false;
 
+//Game imgages
+var playerImg = new Image();
+playerImg.src = "./img/player.png";
+var oxygenTankImg = new Image();
+oxygenTankImg.src = "./img/oxygenTank.png";
+var uppgradeImg = new Image();
+uppgradeImg.src = "./img/upgrade.png";
+var exitImg = new Image();
+exitImg.src = "./img/exit.png"
+
+//Uppgrades
+var oxygenBonus = 0;
+var movementBonus = 0;
+var FovBonus = 0;
+
+//Game adjustment
 var viewDistance = 300;
 var viewAngle = 60;
 var speed = 2;
 var rotationSpeed = 1;
 var startOxygenLevel = oxygen.offsetHeight;
-var oxygenTickSpeed = 500;
+var oxygenTickSpeed = 200;
 var lastOxygenTick = 0;
 var oxygenReductionSpeed = 1;
+var gameEnded = false;
 
-var oxygenBonus = 0;
-var movementBonus = 0;
-var FovBonus = 0;
+//Audio
+var lastPlaybackTime = 0;
+var sonarAudio = new Audio("./sounds/sonar.mp3");
+var ambiance = new Audio("./sounds/ambiance.ogg");
 
+function audioPlayback(audioObj, delay, volume){
+    audioObj.volume = volume;
+
+    if(lastPlaybackTime = 0 || delay < new Date() - lastPlaybackTime){
+        audioObj.play();
+        lastPlaybackTime = new Date();
+    }
+}
+
+//Input handling
 document.addEventListener("keydown", (e) =>{
     if(e.key == "w"){
         moveUp = true;
@@ -43,8 +73,6 @@ document.addEventListener("keydown", (e) =>{
     }
     
 });
-
-
 
 document.addEventListener("keyup", (e) =>{
     if(e.key == "w"){
@@ -112,13 +140,11 @@ class Wall{
             else if(collisionDetectedX && !moveDown && !moveUp){
                 movementStopX = false;
             }
-
-                
-            
+   
             }
     
     reaction(direction){
-        
+        //Stops all object when one has collided
         if(direction === "Y"){
             objList.forEach((e) => {
                 e.dy = 0;
@@ -165,7 +191,7 @@ class Wall{
 
     render(){
         ctx.fillStyle = "white";
-        ctx.fillRect(this.x - 5, this.y - 5,this.width + 10 ,this.height + 10)
+        ctx.fillRect(this.x - 2, this.y - 2,this.width + 4, this.height + 4)
 
         ctx.fillStyle = "black";
         ctx.fillRect(this.x, this.y, this.width, this.height); 
@@ -175,13 +201,14 @@ class Wall{
 }
 
 class PickupableItem{
-    constructor(x, y, width, height, img, itemType){
+    constructor(x, y, width, height, itemType){
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
-        this.img = img;
         this.itemType = itemType;
+        this.lastOverlayTime = 0;
+        this.overlayDelay = 1000;
     }
 
     detection(){
@@ -199,7 +226,10 @@ class PickupableItem{
             player.resetOxygen();
         }
         if(this.itemType == "upgrade"){
-
+            if(this.lastOverlayTime == 0 || new Date() - this.lastOverlayTime > this.overlayDelay){
+                gui.UpgradeOverlay();
+                this.lastOverlayTime = new Date();
+            }
         }
         if(this.itemType == "finishLevel"){
             alert("fin")
@@ -235,16 +265,19 @@ class PickupableItem{
     }; 
 
     render(){
-        if(this.itemType == "oxygenTank")
-            ctx.fillStyle = "blue";
 
-        if(this.itemType == "finishLevel")
-            ctx.fillStyle = "green";
+        if(this.itemType == "oxygenTank"){
+            ctx.drawImage(oxygenTankImg, this.x, this.y, this.width, this.height);
+        }
 
-        ctx.fillRect(this.x - 5, this.y - 5,this.width + 10 ,this.height + 10)
+        if(this.itemType == "finishLevel"){
+            ctx.drawImage(exitImg, this.x, this.y, this.width, this.height);
+        }
 
-        ctx.fillStyle = "black";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        if(this.itemType == "upgrade"){
+            ctx.drawImage(uppgradeImg, this.x, this.y, this.width, this.height);
+        }
+        
     }
 }
 
@@ -258,29 +291,92 @@ class Sonar {
         ctx.translate(player.x + player.width/2, player.y + player.height/2);
         ctx.rotate(player.currentRot * Math.PI / 180);
         ctx.arc(0, 0, viewDistance, (180 - viewAngle/2) * Math.PI / 180, (180 + viewAngle/2) * Math.PI / 180);
-        ctx.strokeStyle = "white";
-        ctx.stroke(); 
-        
-        ctx.restore();
-        ctx.clip();
-        
-        ctx.beginPath();
-        ctx.arc(player.x + player.width/2, player.y + player.height/2, 60, 0, 2 * Math.PI)
+        ctx.arc(0,0, 60, 0, 2 * Math.PI)
         ctx.strokeStyle = "white";
         ctx.stroke();
         
+        ctx.restore();
+        ctx.clip();
     }
 }
 
 class Gui{
     update(){
-        var oxygenTankSize = startOxygenLevel + oxygenBonus;
+        var oxygenTankSize = oxygenTickSpeed + oxygenBonus;
         var moveSpeed = speed + movementBonus;
         var fieldOfView = viewAngle + FovBonus;
 
         oxygenSizeGui.innerHTML = "Tank size: " + oxygenTankSize;
         moveSpeedGui.innerHTML = "Move speed: " + moveSpeed;
         fovGui.innerHTML = "Field of view: " + fieldOfView + "°";
+    }
+    
+    UpgradeOverlay(){
+        var button1 = document.createElement("button");
+        var button2 = document.createElement("button");
+        var button3 = document.createElement("button");
+        var button4 = document.createElement("button");
+    
+        button1.id = "upgradeOxygen";
+        button2.id = "upgradeMovement";
+        button3.id = "upgradeFov";
+        button4.id = "exitMenu";
+
+        button1.innerHTML = "upgrade oxygen";
+        button2.innerHTML = "upgrade movement speed";
+        button3.innerHTML = "upgrade field of view";
+        button4.innerHTML = "Close menu";
+        
+        var overlayDiv = document.createElement("div");
+        overlayDiv.classList = "upgrade";
+    
+        overlayDiv.appendChild(button1);
+        overlayDiv.appendChild(button2);
+        overlayDiv.appendChild(button3);
+        overlayDiv.appendChild(button4);
+        
+        if(document.querySelectorAll(".upgrade").length < 1)
+            body.appendChild(overlayDiv);
+
+        overlayDiv.addEventListener("click", (e) => {
+            if(e.target.id == "upgradeOxygen"){
+                oxygenBonus += 20;
+            }
+
+            if(e.target.id == "upgradeMovement"){
+                movementBonus += 0.1;
+            }
+
+            if(e.target.id == "upgradeFov"){
+                FovBonus += 10;
+            }
+
+            if(e.target.id == "exitMenu"){
+                overlayDiv.remove();
+            }
+        })
+    }
+    
+    gameOver() {
+        var gameOverText;
+        
+        if(player.currentOxygen <= 0){
+            gameOverText = "you ran out of oxygen";
+        }
+    
+        var gameOverP = document.createElement("p")
+        var gameOverDiv = document.createElement("div");
+        gameOverDiv.classList = "gameover";
+        gameOverP.innerHTML = gameOverText;
+    
+        if(document.querySelectorAll(".gameover").length < 1){
+            gameOverDiv.appendChild(gameOverP);
+            body.appendChild(gameOverDiv);
+            
+            gameEnded = true
+    
+        }
+    
     }
 }
 
@@ -296,19 +392,29 @@ class Player {
         this.rotation = 0;
         this.currentRot = 0;
         this.currentOxygen = startOxygenLevel;
+        this.currentOxygenTickSpeed = oxygenTickSpeed;
     }
 
     rotateRender(){
         this.currentRot = this.currentRot + this.rotation;
 
-        ctx.save();
-        ctx.translate(this.x + this.width/2, this.y + this.height/2);
-        ctx.rotate(this.currentRot * Math.PI / 180);
-        ctx.fillStyle = "white";
-        ctx.fillRect(-this.width / 2 - 5, -this.height / 2 - 5, this.width + 10, this.height + 10);
-        ctx.fillStyle = "black";
-        ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-        ctx.restore();
+        if(this.img == ""){
+            ctx.save();
+            ctx.translate(this.x + this.width/2, this.y + this.height/2);
+            ctx.rotate(this.currentRot * Math.PI / 180);
+            ctx.fillStyle = "white";
+            ctx.fillRect(-this.width / 2 - 5, -this.height / 2 - 5, this.width + 10, this.height + 10);
+            ctx.fillStyle = "black";
+            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+            ctx.restore();
+        }
+        else{
+            ctx.save();
+            ctx.translate(this.x + this.width/2, this.y + this.height/2);
+            ctx.rotate(this.currentRot * Math.PI / 180);
+            ctx.drawImage(this.img, -this.width/2, -this.height/2, this.width, this.height)
+            ctx.restore();
+        }
     }
 
     update(){
@@ -330,20 +436,26 @@ class Player {
     oxygenAmount(){
         if(lastOxygenTick == 0 || new Date() - lastOxygenTick > oxygenTickSpeed){
             this.currentOxygen -= oxygenReductionSpeed;
-
-
-            console.log(this.currentOxygen);
+            
+            if(oxygenBonus > 0 && this.currentOxygenTickSpeed < oxygenTickSpeed + oxygenBonus){
+                this.currentOxygenTickSpeed += oxygenBonus;
+            }
+            
             oxygen.style.height = this.currentOxygen + "px"
             lastOxygenTick = new Date();
+
+            if(this.currentOxygen <= 0){
+                gui.gameOver();
+            }
         }
     }
 
     resetOxygen(){
-        this.currentOxygen = startOxygenLevel;
+        this.currentOxygen = startOxygenLevel + oxygenBonus;
     }
 }
 
-var player = new Player(490,290,20,20,"");
+var player = new Player(490, 290, playerImg.width, playerImg.height,playerImg);
 var sonar = new Sonar();
 var gui = new Gui();
 
@@ -352,8 +464,9 @@ objList = [];
 objList.push(new Wall(100,210,300,50,""));
 objList.push(new Wall(100,200,500,50,""));
 
-objList.push(new PickupableItem(50,50,20,20,"","oxygenTank"))
-objList.push(new PickupableItem(100,50,20,20,"","finishLevel"))
+objList.push(new PickupableItem(50,50, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+objList.push(new PickupableItem(100,50,exitImg.width * 0.75, exitImg.height * 0.75,"finishLevel"))
+objList.push(new PickupableItem(150,400, uppgradeImg.width/2, uppgradeImg.height/2,"upgrade"))
 
 function gameLoop (){
     ctx.reset();
@@ -375,14 +488,19 @@ function gameLoop (){
     }
 
     gui.update();
+    
+    audioPlayback(sonarAudio, 800, 0.01);
+    audioPlayback(ambiance, 600, 1);
 
     player.rotateRender();
 
     objList.forEach(element => {
         element.render();
     })
-    
-    requestAnimationFrame(gameLoop)
+
+    if(!gameEnded)
+        requestAnimationFrame(gameLoop)
 }
 
-gameLoop();
+if(!gameEnded)
+    gameLoop();
