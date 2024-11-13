@@ -30,12 +30,12 @@ var movementBonus = 0;
 var FovBonus = 0;
 
 //Game adjustment
-var viewDistance = 300;
+var viewDistance = 250;
 var viewAngle = 60;
 var speed = 2;
 var rotationSpeed = 1;
 var startOxygenLevel = oxygen.offsetHeight;
-var oxygenTickSpeed = 100;
+var oxygenTickSpeed = 10000;
 var lastOxygenTick = 0;
 var oxygenReductionSpeed = 1;
 var gameEnded = false;
@@ -106,43 +106,41 @@ class Wall{
         this.dy = 0;
     }
     
-    detection(player){
+    detection(player, obj){
+            
             var collisionDetectedX = false;
             var collisionDetectedY = false;
             
-            collisionDetectedX = this.x + this.width > player.x && this.x < player.x + player.width;
-            collisionDetectedY = this.y < player.y + player.height && this.y + this.height > player.y;             
-            
-            var xObjLimitLeft = player.x > this.x;
-            var xObjLimitRight = player.x < this.x + this.width;
+            collisionDetectedX = obj.x + obj.width > player.x && obj.x < player.x + player.width;
+            collisionDetectedY = obj.y < player.y + player.height && obj.y + obj.height > player.y;             
 
-            if(collisionDetectedY && moveUp && player.x > this.x && player.x < this.x + this.width){
-                movementStopY = true;
-                this.reaction("Y")
+            if(moveUp){
+                if(collisionDetectedY && player.x > obj.x && player.x < obj.x + obj.width){
+                    movementStopY = true;
+                    obj.reaction("Y");
+                }
+                else if(collisionDetectedX && obj.y < player.y && obj.y + obj.height > player.y + player.height){
+                    movementStopX = true;
+                    obj.reaction("X");
+                }
             }
-            else if(collisionDetectedY && moveDown && xObjLimitLeft && xObjLimitRight){
-                movementStopY = true;
-                
-                this.reaction("Y")
+
+            else if(moveDown){
+                if(collisionDetectedY && player.x > obj.x && player.x < obj.x + obj.width){
+                    movementStopY = true;
+                    obj.reaction("Y");
+                }
+                else if(collisionDetectedX && obj.y < player.y && obj.y + obj.height > player.y + player.height){
+                    movementStopX = true;
+                    obj.reaction("X");
+                }
             }
-            else if(collisionDetectedY){
+            else{
                 movementStopY = false;
-                
-            } 
-            
-            if(collisionDetectedX && moveUp && this.y < player.y && this.y + this.height > player.y + player.height){
-                movementStopX = true;
-                this.reaction("X");
-            }
-            else if(collisionDetectedX && moveDown && this.y < player.y && this.y + this.height > player.y + player.height){
-                movementStopX = true;
-                this.reaction("X");
-            }
-            else if(collisionDetectedX && !moveDown && !moveUp){
                 movementStopX = false;
             }
-   
-            }
+        
+        }
     
     reaction(direction){
         //Stops all object when one has collided
@@ -229,6 +227,15 @@ class PickupableItem{
         if(this.itemType == "upgrade"){
             if(this.lastOverlayTime == 0 || new Date() - this.lastOverlayTime > this.overlayDelay){
                 gui.UpgradeOverlay();
+
+                for (let index = 0; index < objList.length; index++) {
+                    var element = objList[index];
+                    
+                    if(element == this){
+                        objList.splice(index, 1);
+                    }
+                }
+
                 this.lastOverlayTime = new Date();
             }
         }
@@ -371,6 +378,7 @@ class Gui{
         gameOverDiv.classList = "gameover";
         gameOverP.innerHTML = gameOverText;
         restartButton.id = "restart";
+        restartButton.innerHTML = "Restart level";
 
         if(document.querySelectorAll(".gameover").length < 1){
             gameOverDiv.appendChild(gameOverP);
@@ -388,7 +396,7 @@ class Gui{
                 gameOverDiv.remove();
                 gameEnded = false;
                 gameLoop();
-                player.resetOxygen();
+                player.resetOxygen("restart");
             }
         })
     
@@ -465,8 +473,15 @@ class Player {
         }
     }
 
-    resetOxygen(){
-        this.currentOxygen = startOxygenLevel + oxygenBonus;
+    resetOxygen(command){
+        if(command == "restart"){
+            this.currentOxygenTickSpeed = oxygenTickSpeed;
+            this.currentOxygen = startOxygenLevel;
+        }
+        else{
+            this.currentOxygenTickSpeed = oxygenTickSpeed + oxygenBonus;
+            this.currentOxygen = startOxygenLevel;
+        }
     }
 }
 
@@ -477,8 +492,8 @@ var gui = new Gui();
 objList = [];
 lv1List = [];
 
-lv1List.push(new Wall(100,210,300,50,""));
-lv1List.push(new Wall(100,200,500,50,""));
+lv1List.push(new Wall(400,200,300,50,""));
+lv1List.push(new Wall(100,200,500,80,""));
 
 lv1List.push(new PickupableItem(50,50, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
 lv1List.push(new PickupableItem(100,50,exitImg.width * 0.75, exitImg.height * 0.75,"finishLevel"))
@@ -502,8 +517,8 @@ function gameLoop (){
     });
     
     for (let index = 0; index < objList.length; index++) {
-        const element = objList[index];
-        element.detection(player);        
+        var element = objList[index];
+        element.detection(player, element);        
     }
 
     gui.update();

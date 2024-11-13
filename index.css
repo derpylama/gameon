@@ -62,6 +62,11 @@ div{
     background-color: rgb(255, 255, 255);
 }
 
+.gameover button{
+    width: auto;
+    height: auto;
+}
+
 .upgrade{
     display: flex;
     flex-wrap: wrap;
@@ -84,3 +89,4 @@ div{
     width: auto;
     margin: 10px;
 }
+
