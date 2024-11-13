@@ -106,33 +106,35 @@ class Wall{
         this.dy = 0;
     }
     
-    detection(player, obj){
+    detection(player){
             
             var collisionDetectedX = false;
             var collisionDetectedY = false;
             
-            collisionDetectedX = obj.x + obj.width > player.x && obj.x < player.x + player.width;
-            collisionDetectedY = obj.y < player.y + player.height && obj.y + obj.height > player.y;             
+            collisionDetectedX = (this.x < player.x + player.width &&
+                this.x + this.width > player.x) || (player.x < this.x + this.width && player.x + player.width > this.x);
+
+            collisionDetectedY = this.y < player.y + player.height && this.y + this.height > player.y;
 
             if(moveUp){
-                if(collisionDetectedY && player.x > obj.x && player.x < obj.x + obj.width){
+                if(collisionDetectedY && player.x > this.x && player.x < this.x + this.width){
                     movementStopY = true;
-                    obj.reaction("Y");
+                    this.reaction("Y");
                 }
-                else if(collisionDetectedX && obj.y < player.y && obj.y + obj.height > player.y + player.height){
+                if(collisionDetectedX && (this.y < player.y && this.y + this.height > player.y + player.height)){
                     movementStopX = true;
-                    obj.reaction("X");
+                    this.reaction("X");
                 }
             }
 
             else if(moveDown){
-                if(collisionDetectedY && player.x > obj.x && player.x < obj.x + obj.width){
+                if(collisionDetectedY && player.x > this.x && player.x < this.x + this.width){
                     movementStopY = true;
-                    obj.reaction("Y");
+                    this.reaction("Y");
                 }
-                else if(collisionDetectedX && obj.y < player.y && obj.y + obj.height > player.y + player.height){
+                if(collisionDetectedX && (this.y < player.y && this.y + this.height > player.y + player.height)){
                     movementStopX = true;
-                    obj.reaction("X");
+                    this.reaction("X");
                 }
             }
             else{
@@ -304,7 +306,7 @@ class Sonar {
         ctx.arc(0,0, 60, 0, 2 * Math.PI)
         
         ctx.restore();
-        ctx.clip();
+        //ctx.clip();
     }
 }
 
@@ -391,7 +393,6 @@ class Gui{
 
         gameOverDiv.addEventListener("click", (e) => {
             if(e.target.id == "restart"){
-                console.log("test")
                 objList = currentLevel;
                 gameOverDiv.remove();
                 gameEnded = false;
@@ -492,8 +493,8 @@ var gui = new Gui();
 objList = [];
 lv1List = [];
 
-lv1List.push(new Wall(400,200,300,50,""));
-lv1List.push(new Wall(100,200,500,80,""));
+lv1List.push(new Wall(300,220,100,100,""));
+
 
 lv1List.push(new PickupableItem(50,50, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
 lv1List.push(new PickupableItem(100,50,exitImg.width * 0.75, exitImg.height * 0.75,"finishLevel"))
@@ -518,7 +519,7 @@ function gameLoop (){
     
     for (let index = 0; index < objList.length; index++) {
         var element = objList[index];
-        element.detection(player, element);        
+        element.detection(player);        
     }
 
     gui.update();
