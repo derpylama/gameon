@@ -121,7 +121,7 @@ class Wall{
                     movementStopY = true;
                     this.reaction("Y");
                 }
-                if(collisionDetectedX && (this.y < player.y && this.y + this.height > player.y)){
+                if(collisionDetectedX && (this.y < player.y && this.y + this.height > player.y + player.height/2)){
                     movementStopX = true;
                     this.reaction("X");
                 }
@@ -132,7 +132,7 @@ class Wall{
                     movementStopY = true;
                     this.reaction("Y");
                 }
-                if(collisionDetectedX && (this.y < player.y && this.y + this.height > player.y)){
+                if(collisionDetectedX && (this.y < player.y && this.y + this.height > player.y + player.height/2)){
                     movementStopX = true;
                     this.reaction("X");
                 }
