@@ -1,6 +1,11 @@
-canvas = document.querySelector("canvas");
-ctx = canvas.getContext("2d");
-oxygen = document.getElementById("Oxygen");
+var canvas = document.querySelector("canvas");
+var ctx = canvas.getContext("2d");
+var oxygen = document.getElementById("Oxygen");
+var oxygenSizeGui = document.getElementById("OxygenSize");
+var moveSpeedGui = document.getElementById("MoveSpeed")
+var fovGui = document.getElementById("Fov");
+var body = document.querySelector("body");
+
 
 var moveUp;
 var moveLeft;
@@ -9,15 +14,48 @@ var moveRight;
 var movementStopY = false;
 var movementStopX = false;
 
+//Game imgages
+var playerImg = new Image();
+playerImg.src = "./img/player.png";
+var oxygenTankImg = new Image();
+oxygenTankImg.src = "./img/oxygenTank.png";
+var uppgradeImg = new Image();
+uppgradeImg.src = "./img/upgrade.png";
+var exitImg = new Image();
+exitImg.src = "./img/exit.png"
+
+//Uppgrades
+var oxygenBonus = 0;
+var movementBonus = 0;
+var FovBonus = 0;
+
+//Game adjustment
 var viewDistance = 300;
 var viewAngle = 60;
 var speed = 2;
 var rotationSpeed = 1;
 var startOxygenLevel = oxygen.offsetHeight;
-var oxygenTickSpeed = 200;
+var oxygenTickSpeed = 100;
 var lastOxygenTick = 0;
 var oxygenReductionSpeed = 1;
+var gameEnded = false;
+var currentLevel;
 
+//Audio
+var lastPlaybackTime = 0;
+var sonarAudio = new Audio("./sounds/sonar.mp3");
+var ambiance = new Audio("./sounds/ambiance.ogg");
+
+function audioPlayback(audioObj, delay, volume){
+    audioObj.volume = volume;
+
+    if(lastPlaybackTime = 0 || delay < new Date() - lastPlaybackTime){
+        audioObj.play();
+        lastPlaybackTime = new Date();
+    }
+}
+
+//Input handling
 document.addEventListener("keydown", (e) =>{
     if(e.key == "w"){
         moveUp = true;
@@ -36,8 +74,6 @@ document.addEventListener("keydown", (e) =>{
     }
     
 });
-
-
 
 document.addEventListener("keyup", (e) =>{
     if(e.key == "w"){
@@ -74,47 +110,42 @@ class Wall{
             var collisionDetectedX = false;
             var collisionDetectedY = false;
             
-            for (let i = 0; i < objList.length; i++) {
+            collisionDetectedX = this.x + this.width > player.x && this.x < player.x + player.width;
+            collisionDetectedY = this.y < player.y + player.height && this.y + this.height > player.y;             
             
-                    collisionDetectedX = this.x + this.width > player.x && this.x < player.x + player.width;
-                    collisionDetectedY = this.y < player.y + player.height && this.y + this.height > player.y;             
+            var xObjLimitLeft = player.x > this.x;
+            var xObjLimitRight = player.x < this.x + this.width;
 
-                    var xObjLimitLeft = player.x > this.x;
-                    var xObjLimitRight = player.x < this.x + this.width;
-
-                    if(collisionDetectedY && moveUp && xObjLimitLeft && xObjLimitRight){
-                        movementStopY = true;
-                        
-                        this.reaction("Y")
-                    }
-                    else if(collisionDetectedY && moveDown && xObjLimitLeft && xObjLimitRight){
-                        movementStopY = true;
-                        
-                        this.reaction("Y")
-                    }
-                    else if(collisionDetectedY){
-                        movementStopY = false;
-                        
-                    } 
-                    
-                    if(collisionDetectedX && moveUp && this.y < player.y && this.y + this.height > player.y + player.height){
-                        movementStopX = true;
-                        this.reaction("X");
-                    }
-                    else if(collisionDetectedX && moveDown && this.y < player.y && this.y + this.height > player.y + player.height){
-                        movementStopX = true;
-                        this.reaction("X");
-                    }
-                    else if(collisionDetectedX && !moveDown && !moveUp){
-                        movementStopX = false;
-                    }
-
-                }
+            if(collisionDetectedY && moveUp && player.x > this.x && player.x < this.x + this.width){
+                movementStopY = true;
+                this.reaction("Y")
+            }
+            else if(collisionDetectedY && moveDown && xObjLimitLeft && xObjLimitRight){
+                movementStopY = true;
+                
+                this.reaction("Y")
+            }
+            else if(collisionDetectedY){
+                movementStopY = false;
+                
+            } 
             
+            if(collisionDetectedX && moveUp && this.y < player.y && this.y + this.height > player.y + player.height){
+                movementStopX = true;
+                this.reaction("X");
+            }
+            else if(collisionDetectedX && moveDown && this.y < player.y && this.y + this.height > player.y + player.height){
+                movementStopX = true;
+                this.reaction("X");
+            }
+            else if(collisionDetectedX && !moveDown && !moveUp){
+                movementStopX = false;
+            }
+   
             }
     
     reaction(direction){
-        
+        //Stops all object when one has collided
         if(direction === "Y"){
             objList.forEach((e) => {
                 e.dy = 0;
@@ -136,11 +167,11 @@ class Wall{
         var angle = player.currentRot * Math.PI/180;
 
         if(!movementStopY){
-            this.dy = speed * Math.sin(angle);  
+            this.dy = (speed + movementBonus) * Math.sin(angle);  
         }
 
         if(!movementStopX){
-            this.dx = speed * Math.cos(angle);
+            this.dx = (speed + movementBonus) * Math.cos(angle);
         }
 
         if(moveUp){
@@ -161,14 +192,94 @@ class Wall{
 
     render(){
         ctx.fillStyle = "white";
-        ctx.fillRect(this.x - 5, this.y - 5,this.width + 10 ,this.height + 10)
+        ctx.fillRect(this.x - 2, this.y - 2,this.width + 4, this.height + 4)
 
         ctx.fillStyle = "black";
         ctx.fillRect(this.x, this.y, this.width, this.height); 
-        
-        
+           
     }
 
+}
+
+class PickupableItem{
+    constructor(x, y, width, height, itemType){
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.itemType = itemType;
+        this.lastOverlayTime = 0;
+        this.overlayDelay = 1000;
+    }
+
+    detection(){
+        if(this.x + this.width > player.x && this.x < player.x + player.width && this.y < player.y && this.y + this.height > player.y + player.height){
+            this.pickup();
+        };
+        
+        if(this.y < player.y + player.height && this.y + this.height > player.y && player.x > this.x && player.x < this.x + this.width){
+            this.pickup();
+        }
+    }
+
+    pickup(){
+        if(this.itemType == "oxygenTank"){
+            player.resetOxygen();
+        }
+        if(this.itemType == "upgrade"){
+            if(this.lastOverlayTime == 0 || new Date() - this.lastOverlayTime > this.overlayDelay){
+                gui.UpgradeOverlay();
+                this.lastOverlayTime = new Date();
+            }
+        }
+        if(this.itemType == "finishLevel"){
+            alert("fin")
+        }
+    }
+
+    move(){
+
+        var angle = player.currentRot * Math.PI/180;
+
+        if(!movementStopY){
+            this.dy = (speed + movementBonus) * Math.sin(angle);  
+        }
+
+        if(!movementStopX){
+            this.dx = (speed + movementBonus) * Math.cos(angle);
+        }
+
+        if(moveUp){
+            this.vY = this.dy;
+            this.vX = this.dx
+        }
+
+        if(moveDown){
+            this.vY = -this.dy;
+            this.vX = -this.dx;
+        }
+
+        if(moveUp || moveDown){
+            this.y += this.vY;
+            this.x += this.vX;
+        }
+    }; 
+
+    render(){
+
+        if(this.itemType == "oxygenTank"){
+            ctx.drawImage(oxygenTankImg, this.x, this.y, this.width, this.height);
+        }
+
+        if(this.itemType == "finishLevel"){
+            ctx.drawImage(exitImg, this.x, this.y, this.width, this.height);
+        }
+
+        if(this.itemType == "upgrade"){
+            ctx.drawImage(uppgradeImg, this.x, this.y, this.width, this.height);
+        }
+        
+    }
 }
 
 class Sonar {
@@ -182,11 +293,105 @@ class Sonar {
         ctx.rotate(player.currentRot * Math.PI / 180);
         ctx.arc(0, 0, viewDistance, (180 - viewAngle/2) * Math.PI / 180, (180 + viewAngle/2) * Math.PI / 180);
         ctx.strokeStyle = "white";
-        ctx.stroke(); 
+        ctx.stroke();
+        ctx.arc(0,0, 60, 0, 2 * Math.PI)
         
         ctx.restore();
         ctx.clip();
+    }
+}
+
+class Gui{
+    update(){
+        var oxygenTankSize = oxygenTickSpeed + oxygenBonus;
+        var moveSpeed = speed + movementBonus;
+        var fieldOfView = viewAngle + FovBonus;
+
+        oxygenSizeGui.innerHTML = "Tank size: " + oxygenTankSize;
+        moveSpeedGui.innerHTML = "Move speed: " + moveSpeed;
+        fovGui.innerHTML = "Field of view: " + fieldOfView + "°";
+    }
+    
+    UpgradeOverlay(){
+        var button1 = document.createElement("button");
+        var button2 = document.createElement("button");
+        var button3 = document.createElement("button");
+        var button4 = document.createElement("button");
+    
+        button1.id = "upgradeOxygen";
+        button2.id = "upgradeMovement";
+        button3.id = "upgradeFov";
+        button4.id = "exitMenu";
+
+        button1.innerHTML = "upgrade oxygen";
+        button2.innerHTML = "upgrade movement speed";
+        button3.innerHTML = "upgrade field of view";
+        button4.innerHTML = "Close menu";
         
+        var overlayDiv = document.createElement("div");
+        overlayDiv.classList = "upgrade";
+    
+        overlayDiv.appendChild(button1);
+        overlayDiv.appendChild(button2);
+        overlayDiv.appendChild(button3);
+        overlayDiv.appendChild(button4);
+        
+        if(document.querySelectorAll(".upgrade").length < 1)
+            body.appendChild(overlayDiv);
+
+        overlayDiv.addEventListener("click", (e) => {
+            if(e.target.id == "upgradeOxygen"){
+                oxygenBonus += 20;
+            }
+
+            if(e.target.id == "upgradeMovement"){
+                movementBonus += 0.1;
+            }
+
+            if(e.target.id == "upgradeFov"){
+                FovBonus += 10;
+            }
+
+            if(e.target.id == "exitMenu"){
+                overlayDiv.remove();
+            }
+        })
+    }
+    
+    gameOver() {
+        var gameOverText;
+        
+        if(player.currentOxygen <= 0){
+            gameOverText = "you ran out of oxygen";
+        }
+    
+        var gameOverP = document.createElement("p")
+        var gameOverDiv = document.createElement("div");
+        var restartButton = document.createElement("button");
+        gameOverDiv.classList = "gameover";
+        gameOverP.innerHTML = gameOverText;
+        restartButton.id = "restart";
+
+        if(document.querySelectorAll(".gameover").length < 1){
+            gameOverDiv.appendChild(gameOverP);
+            gameOverDiv.appendChild(restartButton);
+
+            body.appendChild(gameOverDiv);
+            
+            gameEnded = true
+        }
+
+        gameOverDiv.addEventListener("click", (e) => {
+            if(e.target.id == "restart"){
+                console.log("test")
+                objList = currentLevel;
+                gameOverDiv.remove();
+                gameEnded = false;
+                gameLoop();
+                player.resetOxygen();
+            }
+        })
+    
     }
 }
 
@@ -202,19 +407,29 @@ class Player {
         this.rotation = 0;
         this.currentRot = 0;
         this.currentOxygen = startOxygenLevel;
+        this.currentOxygenTickSpeed = oxygenTickSpeed;
     }
 
     rotateRender(){
         this.currentRot = this.currentRot + this.rotation;
 
-        ctx.save();
-        ctx.translate(this.x + this.width/2, this.y + this.height/2);
-        ctx.rotate(this.currentRot * Math.PI / 180);
-        ctx.fillStyle = "white";
-        ctx.fillRect(-this.width / 2 - 5, -this.height / 2 - 5, this.width + 10, this.height + 10);
-        ctx.fillStyle = "black";
-        ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-        ctx.restore();
+        if(this.img == ""){
+            ctx.save();
+            ctx.translate(this.x + this.width/2, this.y + this.height/2);
+            ctx.rotate(this.currentRot * Math.PI / 180);
+            ctx.fillStyle = "white";
+            ctx.fillRect(-this.width / 2 - 5, -this.height / 2 - 5, this.width + 10, this.height + 10);
+            ctx.fillStyle = "black";
+            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+            ctx.restore();
+        }
+        else{
+            ctx.save();
+            ctx.translate(this.x + this.width/2, this.y + this.height/2);
+            ctx.rotate(this.currentRot * Math.PI / 180);
+            ctx.drawImage(this.img, -this.width/2, -this.height/2, this.width, this.height)
+            ctx.restore();
+        }
     }
 
     update(){
@@ -236,30 +451,41 @@ class Player {
     oxygenAmount(){
         if(lastOxygenTick == 0 || new Date() - lastOxygenTick > oxygenTickSpeed){
             this.currentOxygen -= oxygenReductionSpeed;
-
-            /*
-            if(this.currentOxygen <= 0){
-                alert("gameover")
-            }*/
-
-            console.log(this.currentOxygen);
+            
+            if(oxygenBonus > 0 && this.currentOxygenTickSpeed < oxygenTickSpeed + oxygenBonus){
+                this.currentOxygenTickSpeed += oxygenBonus;
+            }
+            
             oxygen.style.height = this.currentOxygen + "px"
             lastOxygenTick = new Date();
+
+            if(this.currentOxygen <= 0){
+                gui.gameOver();
+            }
         }
     }
 
     resetOxygen(){
-        this.currentOxygen = startOxygenLevel;
+        this.currentOxygen = startOxygenLevel + oxygenBonus;
     }
 }
 
-var player = new Player(490,290,20,20,"");
+var player = new Player(490, 290, playerImg.width, playerImg.height,playerImg);
 var sonar = new Sonar();
+var gui = new Gui();
 
 objList = [];
+lv1List = [];
 
-objList.push(new Wall(50,100,30,100,""));
-objList.push(new Wall(100,200,30,100,""));
+lv1List.push(new Wall(100,210,300,50,""));
+lv1List.push(new Wall(100,200,500,50,""));
+
+lv1List.push(new PickupableItem(50,50, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+lv1List.push(new PickupableItem(100,50,exitImg.width * 0.75, exitImg.height * 0.75,"finishLevel"))
+lv1List.push(new PickupableItem(150,400, uppgradeImg.width/2, uppgradeImg.height/2,"upgrade"))
+
+objList = lv1List;
+currentLevel = lv1List;
 
 function gameLoop (){
     ctx.reset();
@@ -275,17 +501,25 @@ function gameLoop (){
         element.move();
     });
     
-    objList.forEach((element) => {
-        element.detection(player);
-    })
+    for (let index = 0; index < objList.length; index++) {
+        const element = objList[index];
+        element.detection(player);        
+    }
+
+    gui.update();
+    
+    audioPlayback(sonarAudio, 800, 0.01);
+    audioPlayback(ambiance, 600, 1);
 
     player.rotateRender();
 
     objList.forEach(element => {
         element.render();
     })
-    
-    requestAnimationFrame(gameLoop)
+
+    if(!gameEnded)
+        requestAnimationFrame(gameLoop)
 }
 
-gameLoop();
+if(!gameEnded)
+    gameLoop();

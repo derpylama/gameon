@@ -1,9 +1,10 @@
 body{
     display: flex;
+    background-image: url(./img/bg.avif);
 }
 
 canvas{
-    border: solid red;
+    border: solid blue;
 }
 
 #GUI{
@@ -19,9 +20,9 @@ div{
 
 #Oxygen{
     position: absolute;
-    top: 130px;
+    top: 140px;
     left: 1080px;
-    height: 150px;
+    height: 160px;
     width: 50px;
     background-color: aqua;
 }
@@ -43,9 +44,43 @@ div{
 }
 
 #Stats{
+    color: white;
     position: relative;
-    left: -100px;
+    left: -210px;
+    top: 110px;
+    list-style: none;
+}
+
+.gameover{
+    width: 300px;
+    height: 300px;
+    position: absolute;
+    left: 350px;
+    top: 200px;
+    
+    z-index: 2;
+    background-color: rgb(255, 255, 255);
+}
+
+.upgrade{
     display: flex;
+    flex-wrap: wrap;
     flex-direction: column;
-    height: 80px;
+    width: 300px;
+    height: 300px;
+    position: absolute;
+    left: 350px;
+    top: 200px;
+    justify-content: center;
+    align-content: center;
+
+    z-index: 2;
+    background-color: rgb(255, 255, 255);
+}
+
+.upgrade button{
+    
+    height: auto;
+    width: auto;
+    margin: 10px;
 }
