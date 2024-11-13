@@ -6,7 +6,6 @@ var moveSpeedGui = document.getElementById("MoveSpeed")
 var fovGui = document.getElementById("Fov");
 var body = document.querySelector("body");
 
-
 var moveUp;
 var moveLeft;
 var moveDown;
@@ -35,11 +34,12 @@ var viewAngle = 60;
 var speed = 2;
 var rotationSpeed = 1;
 var startOxygenLevel = oxygen.offsetHeight;
-var oxygenTickSpeed = 10000;
+var oxygenTickSpeed = 300;
 var lastOxygenTick = 0;
 var oxygenReductionSpeed = 1;
 var gameEnded = false;
 var currentLevel;
+var levelList = [];
 
 //Audio
 var lastPlaybackTime = 0;
@@ -242,7 +242,21 @@ class PickupableItem{
             }
         }
         if(this.itemType == "finishLevel"){
-            alert("fin")
+            for (let index = 0; index < levelList.length; index++) {
+                var level = levelList[index];
+                
+                if(currentLevel == level){
+                    
+                    if(!levelList[index + 1] == undefined){
+                        currentLevel = levelList[index + 1];
+                        objList = currentLevel;
+
+                    }
+                    else{
+                        alert("Game Complete")
+                    }
+                }
+            }
         }
     }
 
@@ -292,7 +306,6 @@ class PickupableItem{
 }
 
 class Sonar {
-
     render(){
         
         ctx.beginPath();
@@ -300,13 +313,13 @@ class Sonar {
         ctx.save();
         ctx.translate(player.x + player.width/2, player.y + player.height/2);
         ctx.rotate(player.currentRot * Math.PI / 180);
-        ctx.arc(0, 0, viewDistance, (180 - viewAngle/2) * Math.PI / 180, (180 + viewAngle/2) * Math.PI / 180);
+        ctx.arc(0, 0, viewDistance, (180 - (viewAngle/2 + FovBonus/2)) * Math.PI / 180, (180 + (viewAngle/2 + FovBonus/2)) * Math.PI / 180);
         ctx.strokeStyle = "white";
         ctx.stroke();
         ctx.arc(0,0, 60, 0, 2 * Math.PI)
         
         ctx.restore();
-        //ctx.clip();
+        ctx.clip();
     }
 }
 
@@ -350,15 +363,18 @@ class Gui{
 
         overlayDiv.addEventListener("click", (e) => {
             if(e.target.id == "upgradeOxygen"){
-                oxygenBonus += 20;
+                oxygenBonus += 50;
+                overlayDiv.remove();
             }
 
             if(e.target.id == "upgradeMovement"){
-                movementBonus += 0.1;
+                var newSpeed = Math.round((movementBonus + .2) * 10)/10
+                movementBonus = newSpeed;
             }
 
             if(e.target.id == "upgradeFov"){
                 FovBonus += 10;
+                overlayDiv.remove();
             }
 
             if(e.target.id == "exitMenu"){
@@ -458,7 +474,7 @@ class Player {
     }
 
     oxygenAmount(){
-        if(lastOxygenTick == 0 || new Date() - lastOxygenTick > oxygenTickSpeed){
+        if(lastOxygenTick == 0 || new Date() - lastOxygenTick > this.currentOxygenTickSpeed){
             this.currentOxygen -= oxygenReductionSpeed;
             
             if(oxygenBonus > 0 && this.currentOxygenTickSpeed < oxygenTickSpeed + oxygenBonus){
@@ -467,7 +483,7 @@ class Player {
             
             oxygen.style.height = this.currentOxygen + "px"
             lastOxygenTick = new Date();
-
+            console.log("oxy")
             if(this.currentOxygen <= 0){
                 gui.gameOver();
             }
@@ -502,6 +518,8 @@ lv1List.push(new PickupableItem(150,400, uppgradeImg.width/2, uppgradeImg.height
 
 objList = lv1List;
 currentLevel = lv1List;
+
+levelList.push(lv1List);
 
 function gameLoop (){
     ctx.reset();
