@@ -33,9 +33,9 @@ var FovBonus = 0;
 var viewDistance = 250;
 var viewAngle = 60;
 var speed = 2;
-var rotationSpeed = 1;
+var rotationSpeed = 1.75;
 var startOxygenLevel = oxygen.offsetHeight;
-var oxygenTickSpeed = 300;
+var oxygenTickSpeed = 400;
 var lastOxygenTick = 0;
 var oxygenReductionSpeed = 1;
 var gameEnded = false;
@@ -246,21 +246,29 @@ class PickupableItem{
             }
         }
         if(this.itemType == "finishLevel"){
-            for (let index = 0; index < levelList.length; index++) {
-                var level = levelList[index];
-                
-                if(currentLevel == level){
-                    
-                    if(!levelList[index + 1] == undefined){
-                        currentLevel = levelList[index + 1];
-                        objList = currentLevel;
+           if(currentLevel == lv1List){
+                currentLevel = lv2List;
+                objList = lv2List;
+           }
 
-                    }
-                    else{
-                        alert("Game Complete")
-                    }
-                }
+           else if(currentLevel == lv2List){
+                currentLevel = lv3List;
+                objList = lv3List;                 
+           }
+
+           else if(currentLevel == lv3List){
+                alert("Game complete")
+           }
+
+           for (let index = 0; index < objList.length; index++) {
+            var element = objList[index];
+            
+            if(element == this){
+                objList.splice(index, 1);
             }
+        }
+
+
         }
     }
 
@@ -550,16 +558,126 @@ var gui = new Gui();
 objList = [];
 lv1List = [];
 
-lv1List.push(new Wall(300,220,100,100,""));
+lv1List.push(new Wall(100,220,600,50,""));
+lv1List.push(new Wall(100,380,740,50,""));      
+lv1List.push(new Wall(790,178,50,200,""));
+lv1List.push(new Wall(940,50,50,200,""));
+lv1List.push(new Wall(1190,150,50,150,""));
+lv1List.push(new Wall(1190,150,150,50,""));
+lv1List.push(new Wall(-40,10,50,1100,""));
+lv1List.push(new Wall(100,520,50,600,""));
+lv1List.push(new Wall(240,520,50,350,""));
+lv1List.push(new Wall(380,520,200,50,""));
+lv1List.push(new Wall(380,660,200,50,""));
+lv1List.push(new Wall(240,860,200,50,""));
+lv1List.push(new Wall(530,520,50,390,""));
+lv1List.push(new Wall(700,380,50,390,""));
+lv1List.push(new Wall(12,10,2000,50,""));
+lv1List.push(new Wall(940,380,500,50,""));
+lv1List.push(new Wall(1440,10,50,1200,""));
+lv1List.push(new Wall(940,380,50,200,""));
+lv1List.push(new Wall(1152,520,50,200,""));
+lv1List.push(new Wall(752,680,600,50,""));
+lv1List.push(new Wall(1152,680,50,150,""));
+lv1List.push(new Wall(752,940,740,50,""));
+lv1List.push(new Wall(700,880,50,190,""));
+lv1List.push(new Wall(-210,1050,960,50,""));
+lv1List.push(new PickupableItem(480,575, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+lv1List.push(new PickupableItem(780,575, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+lv1List.push(new PickupableItem(1275,210, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+lv1List.push(new PickupableItem(1220,580,exitImg.width * 0.75, exitImg.height * 0.75,"finishLevel"))
 
-lv1List.push(new PickupableItem(50,50, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
-lv1List.push(new PickupableItem(100,50,exitImg.width * 0.75, exitImg.height * 0.75,"finishLevel"))
-lv1List.push(new PickupableItem(150,400, uppgradeImg.width/2, uppgradeImg.height/2,"upgrade"))
+lv2List = [];
+
+lv2List.push(new Wall(100,380,740,50,""));
+lv2List.push(new Wall(790,178,50,200,""));
+lv2List.push(new Wall(940,50,50,200,""));
+lv2List.push(new Wall(100,50,50,200,""));
+lv2List.push(new Wall(300,178,50,200,""));
+lv2List.push(new Wall(1190,550,50,150,""));
+lv2List.push(new Wall(890,550,350,50,""));
+lv2List.push(new Wall(-40,10,50,1225,""));
+lv2List.push(new Wall(1302,730,50,150,""));
+lv2List.push(new Wall(1150,800,50,150,""));
+lv2List.push(new Wall(900,950,50,300,""));
+lv2List.push(new Wall(1140,408,50,140,""));
+lv2List.push(new Wall(100,432,50,500,""));
+lv2List.push(new Wall(340,550,50,350,""));
+lv2List.push(new Wall(530,550,50,350,""));
+lv2List.push(new Wall(700,550,50,210,""));
+lv2List.push(new Wall(12,10,2000,50,""));
+lv2List.push(new Wall(940,380,250,50,""));
+lv2List.push(new Wall(1340,380,125,50,""));
+lv2List.push(new Wall(1240,190,225,50,""));
+lv2List.push(new Wall(1440,10,50,1200,""));
+lv2List.push(new Wall(940,680,50,300,""));
+lv2List.push(new Wall(752,680,600,50,""));
+lv2List.push(new Wall(752,940,740,50,""));
+lv2List.push(new Wall(700,880,50,190,""));
+lv2List.push(new Wall(-40,1050,560,50,""));
+lv2List.push(new Wall(-40,1200,938,50,""));
+
+lv2List.push(new PickupableItem(1025,800,exitImg.width * 0.75, exitImg.height * 0.75,"finishLevel"))
+lv2List.push(new PickupableItem(825,800, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+lv2List.push(new PickupableItem(1350,80, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+lv2List.push(new PickupableItem(1070,450, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+lv2List.push(new PickupableItem(50,1110, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+lv2List.push(new PickupableItem(870,385, uppgradeImg.width/2, uppgradeImg.height/2,"upgrade"))
+lv2List.push(new PickupableItem(440,725, uppgradeImg.width/2, uppgradeImg.height/2,"upgrade"))
+
+lv3List = [];
+
+lv3List.push(new Wall(-100,1000,1600,50,""));
+lv3List.push(new Wall(1000,850,500,50,""));
+lv3List.push(new Wall(1500,850,50,200,""));
+lv3List.push(new Wall(1000,-600,50,1500,""));
+lv3List.push(new Wall(-100,-100,50,1200,""));
+lv3List.push(new Wall(-100,-100,1000,50,""));
+lv3List.push(new Wall(-100,-600,1100,50,""));
+lv3List.push(new Wall(-100,-600,1100,50,""));
+lv3List.push(new Wall(-100,-600,50,500,""));
+lv3List.push(new Wall(100,-600,50,300,""));
+lv3List.push(new Wall(1150,400,50,300,""));
+lv3List.push(new Wall(1000,400,200,50,""));
+lv3List.push(new Wall(400,-600,50,150,""));
+lv3List.push(new Wall(50,-300,100,50,""));
+lv3List.push(new Wall(400,-302,400,50,""));
+lv3List.push(new Wall(300,100,400,50,""));
+lv3List.push(new Wall(300,702,600,50,""));
+lv3List.push(new Wall(850,452,50,300,""));
+lv3List.push(new Wall(100,452,50,300,""));
+lv3List.push(new Wall(600,300,400,50,""));
+lv3List.push(new Wall(600,300,50,400,""));
+lv3List.push(new Wall(650,-302,50,400,""));
+lv3List.push(new Wall(300,100,50,500,""));
+lv3List.push(new Wall(100,400,250,50,""));
+lv3List.push(new Wall(300,850,500,50,""));
+lv3List.push(new Wall(800,850,50,200,""));
+lv3List.push(new Wall(100,900,50,150,""));
+lv3List.push(new Wall(-100,250,300,50,""));
+lv3List.push(new Wall(100,100,197,50,""));
+lv3List.push(new Wall(353,550,147,50,""));
+lv3List.push(new Wall(450,400,147,50,""));
+lv3List.push(new Wall(753,452,147,50,""));
+lv3List.push(new Wall(600,580,147,50,""));
+lv3List.push(new Wall(700,580,50,120,""));
+
+lv3List.push(new PickupableItem(785,600, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+lv3List.push(new PickupableItem(780,520, uppgradeImg.width/2, uppgradeImg.height/2,"upgrade"))
+
+lv3List.push(new PickupableItem(10,-520, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+lv3List.push(new PickupableItem(0,-400, uppgradeImg.width/2, uppgradeImg.height/2,"upgrade"))
+
+lv3List.push(new PickupableItem(575,-15, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
+
+lv3List.push(new PickupableItem(1400,911,exitImg.width * 0.75, exitImg.height * 0.75,"finishLevel"))
 
 objList = lv1List;
 currentLevel = lv1List;
 
 levelList.push(lv1List);
+levelList.push(lv2List);
+levelList.push(lv3List);
 
 function gameLoop (){
     ctx.reset();
