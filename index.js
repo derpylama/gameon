@@ -5,7 +5,7 @@ var oxygenSizeGui = document.getElementById("OxygenSize");
 var moveSpeedGui = document.getElementById("MoveSpeed")
 var fovGui = document.getElementById("Fov");
 var body = document.querySelector("body");
-
+var hardModeButton = document.getElementById("ToggleHardmode");
 
 var moveUp;
 var moveLeft;
@@ -35,11 +35,13 @@ var viewAngle = 60;
 var speed = 2;
 var rotationSpeed = 1;
 var startOxygenLevel = oxygen.offsetHeight;
-var oxygenTickSpeed = 10000;
+var oxygenTickSpeed = 300;
 var lastOxygenTick = 0;
 var oxygenReductionSpeed = 1;
 var gameEnded = false;
 var currentLevel;
+var levelList = [];
+var hardmode = false;
 
 //Audio
 var lastPlaybackTime = 0;
@@ -48,7 +50,7 @@ var ambiance = new Audio("./sounds/ambiance.ogg");
 
 function audioPlayback(audioObj, delay, volume){
     audioObj.volume = volume;
-
+    
     if(lastPlaybackTime = 0 || delay < new Date() - lastPlaybackTime){
         audioObj.play();
         lastPlaybackTime = new Date();
@@ -212,6 +214,7 @@ class PickupableItem{
         this.overlayDelay = 1000;
     }
 
+
     detection(){
         if(this.x + this.width > player.x && this.x < player.x + player.width && this.y < player.y && this.y + this.height > player.y + player.height){
             this.pickup();
@@ -222,6 +225,7 @@ class PickupableItem{
         }
     }
 
+    //Checks what type of item that the player collided with is and executes the diffrent functions based on each
     pickup(){
         if(this.itemType == "oxygenTank"){
             player.resetOxygen();
@@ -242,7 +246,21 @@ class PickupableItem{
             }
         }
         if(this.itemType == "finishLevel"){
-            alert("fin")
+            for (let index = 0; index < levelList.length; index++) {
+                var level = levelList[index];
+                
+                if(currentLevel == level){
+                    
+                    if(!levelList[index + 1] == undefined){
+                        currentLevel = levelList[index + 1];
+                        objList = currentLevel;
+
+                    }
+                    else{
+                        alert("Game Complete")
+                    }
+                }
+            }
         }
     }
 
@@ -292,7 +310,6 @@ class PickupableItem{
 }
 
 class Sonar {
-
     render(){
         
         ctx.beginPath();
@@ -300,13 +317,14 @@ class Sonar {
         ctx.save();
         ctx.translate(player.x + player.width/2, player.y + player.height/2);
         ctx.rotate(player.currentRot * Math.PI / 180);
-        ctx.arc(0, 0, viewDistance, (180 - viewAngle/2) * Math.PI / 180, (180 + viewAngle/2) * Math.PI / 180);
+        ctx.arc(0, 0, viewDistance, (180 - (viewAngle/2 + FovBonus/2)) * Math.PI / 180, (180 + (viewAngle/2 + FovBonus/2)) * Math.PI / 180);
+        ctx.lineTo(0, 0);
         ctx.strokeStyle = "white";
         ctx.stroke();
         ctx.arc(0,0, 60, 0, 2 * Math.PI)
         
         ctx.restore();
-        //ctx.clip();
+        ctx.clip();
     }
 }
 
@@ -319,6 +337,8 @@ class Gui{
         oxygenSizeGui.innerHTML = "Tank size: " + oxygenTankSize;
         moveSpeedGui.innerHTML = "Move speed: " + moveSpeed;
         fovGui.innerHTML = "Field of view: " + fieldOfView + "°";
+
+        this.drawLineToExit();
     }
     
     UpgradeOverlay(){
@@ -332,7 +352,7 @@ class Gui{
         button3.id = "upgradeFov";
         button4.id = "exitMenu";
 
-        button1.innerHTML = "upgrade oxygen";
+        button1.innerHTML = "upgrade tank size";
         button2.innerHTML = "upgrade movement speed";
         button3.innerHTML = "upgrade field of view";
         button4.innerHTML = "Close menu";
@@ -350,15 +370,18 @@ class Gui{
 
         overlayDiv.addEventListener("click", (e) => {
             if(e.target.id == "upgradeOxygen"){
-                oxygenBonus += 20;
+                oxygenBonus += 50;
+                overlayDiv.remove();
             }
 
             if(e.target.id == "upgradeMovement"){
-                movementBonus += 0.1;
+                var newSpeed = Math.round((movementBonus + .2) * 10)/10
+                movementBonus = newSpeed;
             }
 
             if(e.target.id == "upgradeFov"){
-                FovBonus += 10;
+                FovBonus += 20;
+                overlayDiv.remove();
             }
 
             if(e.target.id == "exitMenu"){
@@ -396,13 +419,45 @@ class Gui{
                 objList = currentLevel;
                 gameOverDiv.remove();
                 gameEnded = false;
-                gameLoop();
                 player.resetOxygen("restart");
+                gameLoop();
             }
         })
     
     }
+
+    drawLineToExit(){
+        if(!hardmode){
+
+            objList.forEach((e) =>{
+                if(e.itemType == "finishLevel"){
+                    var x = e.x + e.width/2;
+                    var y = e.y + e.height/2;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(player.x + player.width/2, player.y + player.height/2);
+                    ctx.strokeStyle = "green";
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+            })
+        }
+    }
+        
 }
+
+hardModeButton.addEventListener("click", (e) => {
+    if(!hardmode){
+        hardmode = true;
+        hardModeButton.innerHTML = "Toggle hardmode: OFF"
+    }
+    else{
+        hardmode = false;
+        hardModeButton.innerHTML = "Toggle hardmode: ON"
+    }
+})
+
 
 class Player {
     constructor(x, y, width, height, img){
@@ -458,7 +513,7 @@ class Player {
     }
 
     oxygenAmount(){
-        if(lastOxygenTick == 0 || new Date() - lastOxygenTick > oxygenTickSpeed){
+        if(lastOxygenTick == 0 || new Date() - lastOxygenTick > this.currentOxygenTickSpeed){
             this.currentOxygen -= oxygenReductionSpeed;
             
             if(oxygenBonus > 0 && this.currentOxygenTickSpeed < oxygenTickSpeed + oxygenBonus){
@@ -495,13 +550,14 @@ lv1List = [];
 
 lv1List.push(new Wall(300,220,100,100,""));
 
-
 lv1List.push(new PickupableItem(50,50, oxygenTankImg.width, oxygenTankImg.height,"oxygenTank"))
 lv1List.push(new PickupableItem(100,50,exitImg.width * 0.75, exitImg.height * 0.75,"finishLevel"))
 lv1List.push(new PickupableItem(150,400, uppgradeImg.width/2, uppgradeImg.height/2,"upgrade"))
 
 objList = lv1List;
 currentLevel = lv1List;
+
+levelList.push(lv1List);
 
 function gameLoop (){
     ctx.reset();
@@ -524,8 +580,8 @@ function gameLoop (){
 
     gui.update();
     
-    audioPlayback(sonarAudio, 800, 0.01);
-    audioPlayback(ambiance, 600, 1);
+    audioPlayback(sonarAudio, 500, 0.1);
+    //audioPlayback(ambiance, 600, 1);
 
     player.rotateRender();
 
