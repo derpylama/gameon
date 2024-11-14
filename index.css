@@ -43,6 +43,11 @@ div{
     height: 40px;
 }
 
+#ToggleHardmode{
+    margin-left: 100px;
+    height: 30px;
+}
+
 #Stats{
     color: white;
     position: relative;
@@ -63,12 +68,13 @@ div{
     top: 200px;
     
     z-index: 2;
-    background-color: rgb(255, 255, 255);
+    background-color: red;
 }
 
 .gameover button{
     width: auto;
     height: auto;
+    
 }
 
 .upgrade{
