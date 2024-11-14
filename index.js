@@ -48,7 +48,7 @@ var ambiance = new Audio("./sounds/ambiance.ogg");
 
 function audioPlayback(audioObj, delay, volume){
     audioObj.volume = volume;
-
+    
     if(lastPlaybackTime = 0 || delay < new Date() - lastPlaybackTime){
         audioObj.play();
         lastPlaybackTime = new Date();
@@ -424,12 +424,12 @@ class Gui{
     drawLineToExit(){
         objList.forEach((e) =>{
             if(e.itemType == "finishLevel"){
-                var x = e.x;
-                var y = e.y;
+                var x = e.x + e.width/2;
+                var y = e.y + e.height/2;
 
                 ctx.beginPath();
                 ctx.moveTo(x, y);
-                ctx.lineTo(player.x, player.y);
+                ctx.lineTo(player.x + player.width/2, player.y + player.height/2);
                 ctx.strokeStyle = "green";
                 ctx.lineWidth = 3;
                 ctx.stroke();
@@ -560,8 +560,8 @@ function gameLoop (){
 
     gui.update();
     
-    audioPlayback(sonarAudio, 800, 0.01);
-    audioPlayback(ambiance, 600, 1);
+    audioPlayback(sonarAudio, 500, 0.1);
+    //audioPlayback(ambiance, 600, 1);
 
     player.rotateRender();
 
