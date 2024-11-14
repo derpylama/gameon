@@ -332,6 +332,8 @@ class Gui{
         oxygenSizeGui.innerHTML = "Tank size: " + oxygenTankSize;
         moveSpeedGui.innerHTML = "Move speed: " + moveSpeed;
         fovGui.innerHTML = "Field of view: " + fieldOfView + "°";
+
+        this.drawLineToExit();
     }
     
     UpgradeOverlay(){
@@ -345,7 +347,7 @@ class Gui{
         button3.id = "upgradeFov";
         button4.id = "exitMenu";
 
-        button1.innerHTML = "upgrade oxygen";
+        button1.innerHTML = "upgrade tank size";
         button2.innerHTML = "upgrade movement speed";
         button3.innerHTML = "upgrade field of view";
         button4.innerHTML = "Close menu";
@@ -418,6 +420,22 @@ class Gui{
         })
     
     }
+
+    drawLineToExit(){
+        objList.forEach((e) =>{
+            if(e.itemType == "finishLevel"){
+                var x = e.x;
+                var y = e.y;
+
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(player.x, player.y);
+                ctx.strokeStyle = "green";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+        })
+    }
 }
 
 class Player {
@@ -483,7 +501,7 @@ class Player {
             
             oxygen.style.height = this.currentOxygen + "px"
             lastOxygenTick = new Date();
-            console.log("oxy")
+
             if(this.currentOxygen <= 0){
                 gui.gameOver();
             }
