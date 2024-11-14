@@ -309,6 +309,7 @@ class PickupableItem{
     }
 }
 
+//Limits the viable area to a cone and cirlcle around the player
 class Sonar {
     render(){
         
@@ -377,6 +378,7 @@ class Gui{
             if(e.target.id == "upgradeMovement"){
                 var newSpeed = Math.round((movementBonus + .2) * 10)/10
                 movementBonus = newSpeed;
+                overlayDiv.remove();
             }
 
             if(e.target.id == "upgradeFov"){
@@ -581,7 +583,6 @@ function gameLoop (){
     gui.update();
     
     audioPlayback(sonarAudio, 500, 0.1);
-    //audioPlayback(ambiance, 600, 1);
 
     player.rotateRender();
 
